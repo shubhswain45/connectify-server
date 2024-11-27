@@ -3,6 +3,7 @@ import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import bodyParser from 'body-parser';
+import { Auth } from './auth';
 
 export async function initServer() {
     const app = express();
@@ -19,14 +20,24 @@ export async function initServer() {
 
     const graphqlServer = new ApolloServer({
         typeDefs: `
+            ${Auth.types}
+
             type Query {
                 sayHello:String
+            }
+
+            type Mutation {
+                ${Auth.mutations}
             }
         `,
         resolvers: {
             Query: {
                 sayHello: () => "Hello"
             },
+
+            Mutation: {
+                ...Auth.resolvers.mutations
+            }
         },
     });
 
