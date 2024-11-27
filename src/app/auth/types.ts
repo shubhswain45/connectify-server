@@ -20,4 +20,9 @@ export const types = `#graphql
         password: String!
     }
 
+    input VerifyEmailPayload {
+        code: String!
+        email: String!
+    }
+
 `

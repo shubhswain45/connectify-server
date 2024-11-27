@@ -16,6 +16,11 @@ interface LoginUserPayload {
     password: string;        // Required field (password)
 }
 
+interface VerifyEmailPayload {
+    code: string
+    email: string
+}
+
 const mutations = {
     signupUser: async (parent: any, { payload }: { payload: SignupUserPayload }, ctx: GraphqlContext) => {
         try {
@@ -63,15 +68,15 @@ const mutations = {
                 },
             });
 
-        
-            const userToken = JWTService.generateTokenForUser({id: newUser.id, username: newUser.username});
+
+            const userToken = JWTService.generateTokenForUser({ id: newUser.id, username: newUser.username });
 
             // Set the JWT token in the cookie
             ctx.res.cookie('__connectify_token', userToken, {
                 httpOnly: true, // Prevents JavaScript from accessing the cookie, enhancing security
                 secure: false,  // Should be true in production to ensure cookies are sent over HTTPS only
                 maxAge: 1000 * 60 * 60 * 24, // 1 day expiry time
-                sameSite: 'lax', // 'lax' is suitable for local development; use 'none' with HTTPS in production
+                sameSite: 'none', // 'lax' is suitable for local development; use 'none' with HTTPS in production
                 path: '/', // The cookie is available to the entire site
             });
 
@@ -112,20 +117,64 @@ const mutations = {
                 throw new Error('Incorrect password!');
             }
 
-            const userToken = JWTService.generateTokenForUser({id: existingUser.id, username: existingUser.username});
+            const userToken = JWTService.generateTokenForUser({ id: existingUser.id, username: existingUser.username });
 
             // Set the JWT token in the cookie
             ctx.res.cookie('__connectify_token', userToken, {
                 httpOnly: true, // Prevents JavaScript from accessing the cookie, enhancing security
                 secure: false,  // Should be true in production to ensure cookies are sent over HTTPS only
                 maxAge: 1000 * 60 * 60 * 24, // 1 day expiry time
-                sameSite: 'lax', // 'lax' is suitable for local development; use 'none' with HTTPS in production
+                sameSite: 'none', // 'lax' is suitable for local development; use 'none' with HTTPS in production
                 path: '/', // The cookie is available to the entire site
             });
 
             // If everything is correct, return the existing user
             return existingUser
 
+        } catch (error: any) {
+            console.log('Error while logging in user:', error.message);
+            throw new Error(error.message || 'An unexpected error occurred');
+        }
+    },
+
+    verifyEmail: async (parent: any, { payload }: { payload: VerifyEmailPayload }, ctx: GraphqlContext) => {
+        try {
+            // Find user by email
+            let user = await prismaClient.user.findUnique({
+                where: { email: payload?.email }
+            });
+
+            // Check if the user exists
+            if (!user) {
+                throw new Error("User not found.");
+            }
+
+            // Check if the user is already verified
+            if (user.isVerified) {
+                throw new Error("Your email is already verified.");
+            }
+
+            // Verify the token
+            if (user.verificationToken !== payload.code) {
+                throw new Error("Invalid verification code.");
+            }
+
+            // Check if the token has expired
+            if (user.verificationTokenExpiresAt && user.verificationTokenExpiresAt < new Date()) {
+                throw new Error("Verification token has expired.");
+            }
+
+            // Update user verification status
+            user = await prismaClient.user.update({
+                where: { email: payload.email },
+                data: {
+                    isVerified: true,
+                    verificationToken: null,
+                    verificationTokenExpiresAt: null,
+                },
+            });
+
+            return user;
         } catch (error: any) {
             console.log('Error while logging in user:', error.message);
             throw new Error(error.message || 'An unexpected error occurred');
