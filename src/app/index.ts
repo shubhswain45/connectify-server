@@ -4,6 +4,9 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import bodyParser from 'body-parser';
 import { Auth } from './auth';
+import JWTService from '../services/JWTService';
+import { GraphqlContext } from '../interfaces';
+import cookieParser from 'cookie-parser'
 
 export async function initServer() {
     const app = express();
@@ -17,8 +20,9 @@ export async function initServer() {
     // Use CORS middleware
     app.use(cors(corsOptions));
     app.use(bodyParser.json({ limit: "10mb" }))
+    app.use(cookieParser())
 
-    const graphqlServer = new ApolloServer({
+    const graphqlServer = new ApolloServer<GraphqlContext>({
         typeDefs: `
             ${Auth.types}
 
@@ -47,7 +51,24 @@ export async function initServer() {
     app.use(
         '/graphql',
         // @ts-ignore
-        expressMiddleware(graphqlServer)
+        expressMiddleware(graphqlServer, {
+            context: async ({ req, res }: { req: Request; res: Response }): Promise<GraphqlContext> => {
+                let token = req.cookies["__connectify_token"];
+
+                let user = undefined;
+                if (token) {
+                    user = JWTService.decodeToken(token);
+                    console.log("decoded user", user);
+                    
+                }
+
+                return {
+                    user,
+                    req,
+                    res,
+                };
+            },
+        })
     );
 
 
