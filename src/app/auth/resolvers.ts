@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import NodeMailerService from "../../services/NodeMailerService";
 import { GraphqlContext, JWTUser } from "../../interfaces";
 import JWTService from "../../services/JWTService";
+import crypto from 'crypto'
 
 interface SignupUserPayload {
     username: string; // Required field
@@ -19,6 +20,12 @@ interface LoginUserPayload {
 interface VerifyEmailPayload {
     code: string
     email: string
+}
+
+interface ResetPasswordPayload {
+    token: string
+    newPassword: string
+    confirmPassword: string
 }
 
 const mutations = {
@@ -175,9 +182,88 @@ const mutations = {
             });
 
             return user;
+
+            NodeMailerService.sendWelcomeEmail(payload.email, user?.username || "")
+
         } catch (error: any) {
             console.log('Error while logging in user:', error.message);
             throw new Error(error.message || 'An unexpected error occurred');
+        }
+    },
+
+    forgotPassword: async (parent: any, { emailOrUsername }: { emailOrUsername: string }, { res }: { res: any }) => {
+        try {
+            // Check if the user exists by email or username
+            const user = await prismaClient.user.findFirst({
+                where: {
+                    OR: [
+                        { email: emailOrUsername },
+                        { username: emailOrUsername }
+                    ]
+                }
+            });
+
+            if (!user) {
+                throw new Error("User not found.");
+            }
+
+            // Generate reset token
+            const resetToken = crypto.randomBytes(20).toString("hex");
+            const resetTokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+
+            // Save the updated user
+            await prismaClient.user.update({
+                where: { id: user.id }, // Use the user's ID for the update
+                data: { resetPasswordToken: resetToken, resetPasswordTokenExpiresAt: resetTokenExpiresAt },
+            });
+
+            // Send reset email
+            await NodeMailerService.sendPasswordResetEmail(user.email, "http://localhost:3000")
+            // Send response
+            return true;
+        } catch (error: any) {
+            console.error("Error in forgotPassword: ", error);
+            throw new Error(error.message);
+        }
+    },
+
+    resetPassword: async (parent: any, { payload }: { payload: ResetPasswordPayload }, ctx: GraphqlContext) => {
+        try {
+            const { token, newPassword, confirmPassword } = payload;
+
+            // Check if the passwords match
+            if (newPassword !== confirmPassword) {
+                throw new Error("Passwords do not match");
+            }
+
+            // Find user with the reset password token and check expiration
+            const user = await prismaClient.user.findUnique({
+                where: {
+                    resetPasswordToken: token,
+                },
+            });
+
+            // Ensure the user exists and the token has not expired
+            if (!user || !user.resetPasswordTokenExpiresAt || user.resetPasswordTokenExpiresAt <= new Date()) {
+                throw new Error("Invalid or expired reset token");
+            }
+
+            // Update the password
+            const hashedPassword = await bcrypt.hash(newPassword, 10); // Use newPassword instead of password
+            await prismaClient.user.update({
+                where: { id: user.id }, // Update user by id
+                data: {
+                    password: hashedPassword,
+                    resetPasswordToken: null, // Clear the token
+                    resetPasswordTokenExpiresAt: null, // Clear the expiration
+                },
+            });
+
+            return true
+
+            NodeMailerService.sendResetSuccessEmail(user?.email || "")
+        } catch (error: any) {
+            throw new Error(error.message);
         }
     },
 };

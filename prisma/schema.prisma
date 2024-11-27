@@ -22,12 +22,12 @@ model User {
   bio             String?
   profileImageURL String?
 
-  isVerified      Boolean
+  isVerified Boolean
 
-  verificationToken String?
+  verificationToken          String?
   verificationTokenExpiresAt DateTime?
 
-  resetPasswordToken String?
+  resetPasswordToken          String?   @unique
   resetPasswordTokenExpiresAt DateTime?
 
   createdAt DateTime @default(now())
