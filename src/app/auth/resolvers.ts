@@ -28,6 +28,20 @@ interface ResetPasswordPayload {
     confirmPassword: string
 }
 
+const queries = {
+    getCurrentUser: async (parent: any, args: any, ctx: GraphqlContext) => {
+        try {
+            const id = ctx.user?.id;
+            if (!id) return null;
+
+            const user = await prismaClient.user.findUnique({ where: { id } });
+            return user;
+        } catch (error) {
+            return null;
+        }
+    }
+};
+
 const mutations = {
     signupUser: async (parent: any, { payload }: { payload: SignupUserPayload }, ctx: GraphqlContext) => {
         try {
@@ -181,9 +195,9 @@ const mutations = {
                 },
             });
 
+            NodeMailerService.sendWelcomeEmail(payload.email, user?.username || "")
             return user;
 
-            NodeMailerService.sendWelcomeEmail(payload.email, user?.username || "")
 
         } catch (error: any) {
             console.log('Error while logging in user:', error.message);
@@ -259,13 +273,13 @@ const mutations = {
                 },
             });
 
+            NodeMailerService.sendResetSuccessEmail(user?.email || "")
             return true
 
-            NodeMailerService.sendResetSuccessEmail(user?.email || "")
         } catch (error: any) {
             throw new Error(error.message);
         }
     },
 };
 
-export const resolvers = { mutations }
+export const resolvers = { queries, mutations }
