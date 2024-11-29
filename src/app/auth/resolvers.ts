@@ -95,9 +95,9 @@ const mutations = {
             // Set the JWT token in the cookie
             ctx.res.cookie('__connectify_token', userToken, {
                 httpOnly: true, // Prevents JavaScript from accessing the cookie, enhancing security
-                secure: true,  // Should be true in production to ensure cookies are sent over HTTPS only
+                secure: false,  // Should be true in production to ensure cookies are sent over HTTPS only
                 maxAge: 1000 * 60 * 60 * 24, // 1 day expiry time
-                sameSite: 'none', // 'lax' is suitable for local development; use 'none' with HTTPS in production
+                sameSite: 'lax', // 'lax' is suitable for local development; use 'none' with HTTPS in production
                 path: '/', // The cookie is available to the entire site
             });
 
@@ -140,12 +140,12 @@ const mutations = {
 
             const userToken = JWTService.generateTokenForUser({ id: existingUser.id, username: existingUser.username });
 
-            // Set the JWT token in the cookie
+            // Set the JWT token in the cookiep
             ctx.res.cookie('__connectify_token', userToken, {
                 httpOnly: true, // Prevents JavaScript from accessing the cookie, enhancing security
-                secure: true,  // Should be true in production to ensure cookies are sent over HTTPS only
+                secure: false,  // Should be true in production to ensure cookies are sent over HTTPS only
                 maxAge: 1000 * 60 * 60 * 24, // 1 day expiry time
-                sameSite: 'none', // 'lax' is suitable for local development; use 'none' with HTTPS in production
+                sameSite: 'lax', // 'lax' is suitable for local development; use 'none' with HTTPS in production
                 path: '/', // The cookie is available to the entire site
             });
 
@@ -232,7 +232,7 @@ const mutations = {
             });
 
             // Send reset email
-            await NodeMailerService.sendPasswordResetEmail(user.email, "http://localhost:3000")
+            await NodeMailerService.sendPasswordResetEmail(user.email, `https://testing-app-fawn.vercel.app/reset-password/${resetToken}`)
             // Send response
             return true;
         } catch (error: any) {
@@ -285,8 +285,8 @@ const mutations = {
         try {
             ctx.res.clearCookie("__connectify_token", {
                 httpOnly: true,
-                secure: true, // Set to `true` in production
-                sameSite: 'none',
+                secure: false, // Set to `true` in production
+                sameSite: 'lax',
                 path: '/',
             });
 
