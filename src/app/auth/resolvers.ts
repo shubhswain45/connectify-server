@@ -286,7 +286,7 @@ const mutations = {
             ctx.res.clearCookie("__connectify_token", {
                 httpOnly: true,
                 secure: true, // Set to `true` in production
-                sameSite: 'lax',
+                sameSite: 'none',
                 path: '/',
             });
 
