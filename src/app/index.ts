@@ -18,12 +18,13 @@ export async function initServer() {
         credentials: true, // Ensure cookies are sent with cross-origin requests
     };
 
+    //llllllllllllll
     // Use CORS middleware
     app.use(cors(corsOptions));
     app.use(bodyParser.json({ limit: "10mb" }))
     app.use(cookieParser())
 
-    const graphqlServer = new ApolloServer<GraphqlContext>({
+    const graphqlServer = new ApolloServer<GraphqlContext>({            
         typeDefs: `
             ${Auth.types}
             ${Track.types}
