@@ -11,38 +11,38 @@ datasource db {
 }
 
 model User {
-  id              String  @id @default(cuid())       // Unique identifier
-  username        String  @unique                   // Username, must be unique
-  fullName        String                            // Full name of the user
-  email           String  @unique                   // Email, must be unique
-  password        String                            // User's hashed password
-  bio             String?                           // Optional bio
-  profileImageURL String?                           // Optional profile image URL
+  id              String  @id @default(cuid()) // Unique identifier
+  username        String  @unique // Username, must be unique
+  fullName        String // Full name of the user
+  email           String  @unique // Email, must be unique
+  password        String // User's hashed password
+  bio             String? // Optional bio
+  profileImageURL String? // Optional profile image URL
 
-  isVerified Boolean                                // Is the user's email verified?
+  isVerified Boolean // Is the user's email verified?
 
-  verificationToken          String?                // Verification token for email
-  verificationTokenExpiresAt DateTime?             // Expiry of verification token
+  verificationToken          String? // Verification token for email
+  verificationTokenExpiresAt DateTime? // Expiry of verification token
 
-  resetPasswordToken          String? @unique       // Reset password token
-  resetPasswordTokenExpiresAt DateTime?            // Expiry of reset password token
+  resetPasswordToken          String?   @unique // Reset password token
+  resetPasswordTokenExpiresAt DateTime? // Expiry of reset password token
 
-  createdAt DateTime @default(now())               // User creation timestamp
-  updatedAt DateTime @updatedAt                    // Auto-updated timestamp
+  createdAt DateTime @default(now()) // User creation timestamp
+  updatedAt DateTime @updatedAt // Auto-updated timestamp
 
-  tracks Track[]                                   // Relation: tracks authored by the user
+  tracks Track[] // Relation: tracks authored by the user
 }
 
 model Track {
-  id            String   @id @default(cuid())      // Unique identifier
-  title         String                            // Track title
-  artist        String?                           // Name of the artist or band
-  duration      Int                               // Duration of the track in seconds
-  coverImageUrl String?                           // Optional URL to the cover image
-  audioFileUrl  String                            // URL to the audio file
-  createdAt     DateTime @default(now())          // Track creation timestamp
-  updatedAt     DateTime @updatedAt               // Auto-updated timestamp
+  id            String   @id @default(cuid()) // Unique identifier
+  title         String // Track title
+  artist        String? // Name of the artist or band
+  duration      String // Duration of the track in seconds
+  coverImageUrl String? // Optional URL to the cover image
+  audioFileUrl  String // URL to the audio file
+  createdAt     DateTime @default(now()) // Track creation timestamp
+  updatedAt     DateTime @updatedAt // Auto-updated timestamp
 
-  authorId String                                 // Foreign key for the User
-  author   User    @relation(fields: [authorId], references: [id]) // Relation to User model
+  authorId String // Foreign key for the User
+  author   User   @relation(fields: [authorId], references: [id]) // Relation to User model
 }

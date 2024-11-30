@@ -14,7 +14,7 @@ export async function initServer() {
 
     // CORS configuration
     const corsOptions = {
-        origin: ['http://localhost:3000'], // your frontend URL
+        origin: ['https://testing-app-fawn.vercel.app'], // your frontend URL
         credentials: true, // Ensure cookies are sent with cross-origin requests
     };
 
@@ -30,6 +30,7 @@ export async function initServer() {
 
             type Query {
                 ${Auth.queries}
+                ${Track.queries}
             }
 
             type Mutation {
@@ -39,7 +40,8 @@ export async function initServer() {
         `,
         resolvers: {
             Query: {
-                ...Auth.resolvers.queries
+                ...Auth.resolvers.queries,
+                ...Track.resolvers.queries
             },
 
             Mutation: {

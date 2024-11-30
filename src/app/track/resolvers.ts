@@ -8,8 +8,25 @@ interface CreateTrackPayload {
     audioFileUrl: string;    // URL to the audio file, required
     coverImageUrl?: string;  // URL to the cover image, optional
     artist?: string;  // URL to the cover image, optional
-    duration: number
+    duration: string
 }
+
+const queries = {
+    //[1,2,3,4,5,6,7,8,9,10,11,12]
+    getFeedTracks: async (parent: any, agrs: { args: any }, ctx: GraphqlContext) => {
+        try {
+            // Fetch posts by users whom the current user follows
+            const tracks = await prismaClient.track.findMany({
+               take: 5
+            });
+
+           return tracks
+        } catch (error) {
+            console.error("Error fetching feed posts:", error);
+            throw new Error("Failed to fetch feed posts.");
+        }
+    },
+};
 
 const mutations = {
     createTrack: async (
@@ -65,4 +82,4 @@ const extraResolvers = {
 
 }
 
-export const resolvers = { mutations, extraResolvers };
+export const resolvers = { mutations, queries,extraResolvers };
