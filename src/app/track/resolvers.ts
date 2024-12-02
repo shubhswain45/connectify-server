@@ -97,6 +97,37 @@ const mutations = {
             throw new Error(error.message || "An error occurred while creating the track.");
         }
     },
+
+    deleteTrack: async (
+        parent: any,
+        { trackId }: { trackId: string },
+        ctx: GraphqlContext
+    ) => {
+        try {
+            // Ensure the user is authenticated
+            if (!ctx.user) throw new Error("Please Login/Signup first!");
+
+            const track = await prismaClient.track.findUnique({ where: { id: trackId } })
+
+            if (!track) {
+                throw new Error("Post Doest exist!");
+            }
+
+            if (track.authorId.toString() != ctx.user.id.toString()) {
+                throw new Error("You cant delete someone else post!");
+            }
+
+            await prismaClient.track.delete({ where: { id: trackId } })
+
+            return true
+
+        } catch (error: any) {
+            // Handle errors gracefully (Cloudinary or Prisma issues)
+            console.error("Error toggling like:", error);
+            throw new Error(error.message || "An error occurred while toggling the like on the post.");
+        }
+    },
+
 };
 
 
