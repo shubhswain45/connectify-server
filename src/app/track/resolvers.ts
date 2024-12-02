@@ -128,6 +128,44 @@ const mutations = {
         }
     },
 
+    likeTrack: async (parent: any, { trackId }: { trackId: string }, ctx: GraphqlContext) => {
+
+        try {
+            // Ensure the user is authenticated
+            if (!ctx.user) throw new Error("Please Login/Signup first");
+
+            // Attempt to delete the like (unlike the post)
+            await prismaClient.like.delete({
+                where: {
+                    userId_trackId: {
+                        userId: ctx.user.id,  // User ID from the context
+                        trackId,
+                    }
+                }
+            });
+
+            // If successful, return a response indicating the post was unliked
+            return false; // Post was unliked
+
+        } catch (error: any) {
+            // If the like doesn't exist, handle the error and create the like (like the post)
+            if (error.code === 'P2025') { // This error code indicates that the record was not found
+                // Create a like entry (Prisma will automatically link the user and post)
+                await prismaClient.like.create({
+                    data: {
+                        userId: ctx?.user?.id || "",  // User ID from the context
+                        trackId,  // Post ID to associate the like with
+                    }
+                });
+                return true; // Post was liked
+            }
+
+           // Handle errors gracefully (Cloudinary or Prisma issues)
+           console.error("Error toggling like:", error);
+           throw new Error(error.message || "An error occurred while toggling the like on the post.");
+        }
+    },
+
 };
 
 

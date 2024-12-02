@@ -31,6 +31,7 @@ model User {
   updatedAt DateTime @updatedAt // Auto-updated timestamp
 
   tracks Track[] // Relation: tracks authored by the user
+  likes  Like[] // Relation to track likes by this user
 }
 
 model Track {
@@ -43,6 +44,20 @@ model Track {
   createdAt     DateTime @default(now()) // Track creation timestamp
   updatedAt     DateTime @updatedAt // Auto-updated timestamp
 
+  likes Like[] // Relation to track likes on this post
+
   authorId String // Foreign key for the User
   author   User   @relation(fields: [authorId], references: [id]) // Relation to User model
+}
+
+model Like {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  track   Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  trackId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, trackId]) // Ensure that a user can like a post only once
 }
