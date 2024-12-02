@@ -26,6 +26,31 @@ const queries = {
             throw new Error("Failed to fetch feed posts.");
         }
     },
+
+    getTrackById: async (
+        parent: any,
+        { id }: { id: string },
+        ctx: GraphqlContext
+    ) => {
+        try {
+            // Fetch the post along with related data
+            const track = await prismaClient.track.findUnique({
+                where: { id },
+            });
+
+            if (!track) {
+                return null;
+            }
+
+            return track
+
+            
+        } catch (error) {
+            // Log the error for debugging
+            console.error("Error fetching post:", error);
+            throw new Error("Failed to fetch the post. Please try again.");
+        }
+    }
 };
 
 const mutations = {
