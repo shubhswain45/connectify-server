@@ -26,7 +26,7 @@ export async function initServer() {
 
     const graphqlServer = new ApolloServer<GraphqlContext>({            
         typeDefs: `
-            ${Auth.types}
+            ${Auth.types}        
             ${Track.types}
 
             type Query {
