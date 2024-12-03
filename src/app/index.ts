@@ -8,13 +8,14 @@ import JWTService from '../services/JWTService';
 import { GraphqlContext } from '../interfaces';
 import cookieParser from 'cookie-parser'
 import { Track } from './track';
+import { User } from './user';
 
 export async function initServer() {
     const app = express();
 
     // CORS configuration
     const corsOptions = {
-        origin: ['https://testing-app-fawn.vercel.app'], // your frontend URL
+        origin: ['http://localhost:3000'], // your frontend URL
         credentials: true, // Ensure cookies are sent with cross-origin requests
     };
 
@@ -28,6 +29,7 @@ export async function initServer() {
         typeDefs: `
             ${Auth.types}
             ${Track.types}
+            ${User.types}
 
             type Query {
                 ${Auth.queries}
@@ -37,6 +39,7 @@ export async function initServer() {
             type Mutation {
                 ${Auth.mutations}
                 ${Track.mutations}
+                ${User.mutations}
             }
         `,
         resolvers: {
@@ -47,7 +50,8 @@ export async function initServer() {
 
             Mutation: {
                 ...Auth.resolvers.mutations,
-                ...Track.resolvers.mutations
+                ...Track.resolvers.mutations,
+                ...User.resolvers.mutations
             },
 
             ...Track.resolvers.extraResolvers

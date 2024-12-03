@@ -32,6 +32,10 @@ model User {
 
   tracks Track[] // Relation: tracks authored by the user
   likes  Like[] // Relation to track likes by this user
+
+  // Relations to Followers and Followings through the Follow model
+  followings       Follow[]  @relation("Follower")  // Users this user is following
+  followers       Follow[]  @relation("Following")  // Users following this user
 }
 
 model Track {
@@ -60,4 +64,19 @@ model Like {
   createdAt DateTime @default(now())
 
   @@unique([userId, trackId]) // Ensure that a user can like a post only once
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId]) // Ensure a user cannot follow the same user multiple times
+  @@index([followerId])  // Index for fast lookup of follows by followerId
+  @@index([followingId]) // Index for fast lookup of follows by followingId
 }

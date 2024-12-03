@@ -17,7 +17,8 @@ type Track {
   audioFileUrl: String!      # URL to the audio file
   createdAt: String!         # When the track was added
   updatedAt: String!         # Automatically updated on change
-
+  hasLiked: Boolean!
+  
   author: User
 }
 

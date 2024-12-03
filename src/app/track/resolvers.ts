@@ -29,20 +29,29 @@ const queries = {
 
     getTrackById: async (
         parent: any,
-        { id }: { id: string },
+        { trackId }: { trackId: string },
         ctx: GraphqlContext
     ) => {
         try {
             // Fetch the post along with related data
             const track = await prismaClient.track.findUnique({
-                where: { id },
+                where: { id: trackId },
+                include: {
+                    likes: {
+                        where: { userId: ctx.user?.id }, // Check if the specific user has liked the post
+                        select: { userId: true },
+                    },
+                }
             });
 
             if (!track) {
                 return null;
             }
 
-            return track
+            return {
+                ...track,
+                hasLiked: track?.likes?.length > 0
+            }
 
             
         } catch (error) {
@@ -129,42 +138,39 @@ const mutations = {
     },
 
     likeTrack: async (parent: any, { trackId }: { trackId: string }, ctx: GraphqlContext) => {
-
+        if (!ctx.user) throw new Error("Please Login/Signup first");
+    
         try {
-            // Ensure the user is authenticated
-            if (!ctx.user) throw new Error("Please Login/Signup first");
-
-            // Attempt to delete the like (unlike the post)
+            // Attempt to delete the like (unlike the track)
             await prismaClient.like.delete({
                 where: {
                     userId_trackId: {
-                        userId: ctx.user.id,  // User ID from the context
+                        userId: ctx.user.id,
                         trackId,
-                    }
-                }
+                    },
+                },
             });
-
-            // If successful, return a response indicating the post was unliked
-            return false; // Post was unliked
-
+            // If successful, return false (indicating the track is now unliked)
+            return false;
+    
         } catch (error: any) {
-            // If the like doesn't exist, handle the error and create the like (like the post)
-            if (error.code === 'P2025') { // This error code indicates that the record was not found
-                // Create a like entry (Prisma will automatically link the user and post)
+            if (error.code === 'P2025') {
+                // Create a like if not found (toggle to liked)
                 await prismaClient.like.create({
                     data: {
-                        userId: ctx?.user?.id || "",  // User ID from the context
-                        trackId,  // Post ID to associate the like with
-                    }
+                        userId: ctx.user.id,
+                        trackId,
+                    },
                 });
-                return true; // Post was liked
+                return true; // Indicate the track is now liked
+            } else {
+                // Log and throw unexpected errors
+                console.error("Error toggling like:", error);
+                throw new Error("An error occurred while toggling the like on the track.");
             }
-
-           // Handle errors gracefully (Cloudinary or Prisma issues)
-           console.error("Error toggling like:", error);
-           throw new Error(error.message || "An error occurred while toggling the like on the post.");
         }
     },
+    
 
 };
 
