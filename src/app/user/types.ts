@@ -5,9 +5,9 @@ export const types = `#graphql
         fullName: String!
         profileImageURL: String
         bio: String
-        totalPosts: Int!
+        totalTracks: Int!
         totalFollowers: Int!
         totalFollowings: Int!
-        followed: Boolean!
+        followedByMe: Boolean!
     }
 `
