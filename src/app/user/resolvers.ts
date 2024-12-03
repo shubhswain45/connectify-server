@@ -40,7 +40,7 @@ export const queries = {
             }
 
             // Calculate the total number of posts, followers, and followings from the counts
-            const totalPosts = user._count.tracks;
+            const totalTracks = user._count.tracks;
             const totalFollowers = user._count.followers;
             const totalFollowings = user._count.followings;
 
@@ -53,7 +53,7 @@ export const queries = {
                 fullName: user.fullName,
                 profileImageURL: user.profileImageURL || '', // Default to empty string if no profile image
                 bio: user.bio,
-                totalPosts,
+                totalTracks,
                 totalFollowers,
                 totalFollowings,
                 followedByMe, // This is now a boolean based on whether the current user follows
