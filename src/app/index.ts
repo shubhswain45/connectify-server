@@ -15,7 +15,7 @@ export async function initServer() {
 
     // CORS configuration
     const corsOptions = {
-        origin: ['http://localhost:3000'], // your frontend URL
+        origin: ['https://testing-app-fawn.vercel.app'], // your frontend URL
         credentials: true, // Ensure cookies are sent with cross-origin requests
     };
 
@@ -25,7 +25,7 @@ export async function initServer() {
     app.use(bodyParser.json({ limit: "10mb" }))
     app.use(cookieParser())
 
-    const graphqlServer = new ApolloServer<GraphqlContext>({            
+    const graphqlServer = new ApolloServer<GraphqlContext>({
         typeDefs: `
             ${Auth.types}
             ${Track.types}
@@ -74,7 +74,7 @@ export async function initServer() {
                 if (token) {
                     user = JWTService.decodeToken(token);
                     console.log("decoded user", user);
-                    
+
                 }
 
                 return {

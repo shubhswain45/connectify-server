@@ -17,10 +17,20 @@ const queries = {
         try {
             // Fetch posts by users whom the current user follows
             const tracks = await prismaClient.track.findMany({
-               take: 5
+                take: 5,
+                include: {
+                    likes: {
+                        where: { userId: ctx.user?.id }, // Check if the specific user has liked the post
+                        select: { userId: true },
+                    },
+                }
             });
 
-           return tracks
+            return tracks.map(track => ({
+                ...track,
+                hasLiked: track.likes.length > 0, // Check if the likes array has the current user's like
+            }));
+            
         } catch (error) {
             console.error("Error fetching feed posts:", error);
             throw new Error("Failed to fetch feed posts.");
@@ -53,7 +63,7 @@ const queries = {
                 hasLiked: track?.likes?.length > 0
             }
 
-            
+
         } catch (error) {
             // Log the error for debugging
             console.error("Error fetching post:", error);
@@ -61,37 +71,37 @@ const queries = {
         }
     },
 
-    getUserTracks: async (
+    getTrackBydummyId: async (
         parent: any,
-        { username }: { username: string },
+        { trackId }: { trackId: string },
         ctx: GraphqlContext
     ) => {
         try {
-            // Fetch and sort posts by creation date in descending order
-            const tracks = await prismaClient.track.findMany({
-                where: { author: { username } },
-                orderBy: {
-                    createdAt: "desc", // Sort by createdAt in descending order
-                },
+            // Fetch the post along with related data
+            const track = await prismaClient.track.findUnique({
+                where: { id: trackId },
                 include: {
                     likes: {
                         where: { userId: ctx.user?.id }, // Check if the specific user has liked the post
                         select: { userId: true },
-                    }
-                },
+                    },
+                }
             });
 
+            if (!track) {
+                return null;
+            }
 
-            return tracks.map(track => ({
+            return {
                 ...track,
-                hasLiked: track.likes.length > 0, // Check if the likes array has the current user's like
-            }));
+                hasLiked: track?.likes?.length > 0
+            }
+
+
         } catch (error) {
             // Log the error for debugging
-            console.error("Error fetching user posts:", error);
-
-            // Throw a generic error message to the client
-            throw new Error("Failed to fetch user posts. Please try again.");
+            console.error("Error fetching post:", error);
+            throw new Error("Failed to fetch the post. Please try again.");
         }
     },
 };
@@ -173,7 +183,7 @@ const mutations = {
 
     likeTrack: async (parent: any, { trackId }: { trackId: string }, ctx: GraphqlContext) => {
         if (!ctx.user) throw new Error("Please Login/Signup first");
-    
+
         try {
             // Attempt to delete the like (unlike the track)
             await prismaClient.like.delete({
@@ -186,7 +196,7 @@ const mutations = {
             });
             // If successful, return false (indicating the track is now unliked)
             return false;
-    
+
         } catch (error: any) {
             if (error.code === 'P2025') {
                 // Create a like if not found (toggle to liked)
@@ -204,7 +214,7 @@ const mutations = {
             }
         }
     },
-    
+
 
 };
 
@@ -216,4 +226,4 @@ const extraResolvers = {
 
 }
 
-export const resolvers = { mutations, queries,extraResolvers };
+export const resolvers = { mutations, queries, extraResolvers };

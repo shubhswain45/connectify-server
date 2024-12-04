@@ -27,11 +27,11 @@ export const queries = {
                         },
                     },
                     // Fetch follow relationship with the current user only if `currentUserId` exists
-                    followers: {
-                        where: {
-                            followerId: currentUserId,
-                        },
-                    },
+                    followers:{
+                            where: {
+                                followerId: currentUserId,
+                            },
+                        }
                 },
             });
 
@@ -67,10 +67,47 @@ export const queries = {
             throw new Error(error.message || "An error occurred while toggling the like on the post.");
         }
     },
+
+    getUserTracks: async (
+        parent: any,
+        { username }: { username: string },
+        ctx: GraphqlContext
+    ) => {
+        try {
+            // Fetch and sort posts by creation date in descending order
+            const tracks = await prismaClient.track.findMany({
+                where: { author: { username } },
+                orderBy: {
+                    createdAt: "desc", // Sort by createdAt in descending order
+                },
+                include: {
+                    author: true,
+                    _count: {
+                        select: { likes: true }, // Get the count of likes as totalLikeCount
+                    },
+                    likes: {
+                        where: { userId: ctx.user?.id }, // Check if the specific user has liked the post
+                        select: { userId: true },
+                    },
+                },
+            });
+
+
+            return tracks.map(track => ({
+                ...track,
+                hasLiked: track.likes.length > 0, // Check if the likes array has the current user's like
+            }));
+        } catch (error) {
+            // Log the error for debugging
+            console.error("Error fetching user posts:", error);
+
+            // Throw a generic error message to the client
+            throw new Error("Failed to fetch user posts. Please try again.");
+        }
+    },
 };
 
-
-export const mutations = {
+const mutations = {
     followUser: async (parent: any, { userId }: { userId: string }, ctx: GraphqlContext) => {
         // Ensure the user is authenticated
         try {
@@ -108,5 +145,4 @@ export const mutations = {
     }
 }
 
-
-export const resolvers = { queries, mutations } 
+export const resolvers = { queries, mutations }
