@@ -86,8 +86,10 @@ export const queries = {
                 }
               : undefined, // Skip if the user is not logged in
           },
-        });
+        });         
   
+        const hasLike ="lll"
+        
         return tracks.map((track) => ({
           id: track.id,
           title: track.title,
